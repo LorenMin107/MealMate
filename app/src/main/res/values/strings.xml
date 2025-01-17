@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">MealMate</string>
+    <string name="meal_mate">Meal Mate</string>
+
+    //Intro Screen
+    <string name="image_contentDescription">image</string>
+    <string name="let_s_get_started_text">Let\'s Get started</string>
+    <string name="intro_text_description">Collaborate and Plan Together Across Multiple Devices on tOdO’s Minimalist Interface.</string>
+    <string name="sign_in">SIGN IN</string>
+    <string name="sign_up">SIGN UP</string>
+
+    //Authentication Screen
+    <string name="sign_up_description_text">Enter your name, email id and password, to register with us.</string>
+    <string name="name">Name</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="sign_in_description_text">Enter your email id and password, to sign in with us.</string>
+
+    //Common Strings
+    <string name="please_click_back_again_to_exit">Please click back again to exit.</string>
+    <string name="please_wait">Please Wait&#8230;</string>
+
+    <string name="nav_my_profile">My Profile</string>
+    <string name="nav_sign_out">Sign out</string>
+
+    <string name="mobile">Mobile</string>
+    <string name="update">Update</string>
+    <string name="my_profile_title">My Profile</string>
+
+    <string name="create_meal_title">Create Board</string>
+    <string name="create">CREATE</string>
+    <string name="meal_name">Meal Name</string>
+    <string name="add_meal_board_button_description">Add a new board</string>
+    <string name="no_meal_boards_available">No boards available</string>
+    <string name="edit_contentDescription">editing the meal board</string>
+    <string name="delete_contentDescription">Deleting the meal board\n</string>
+
+
+</resources>
