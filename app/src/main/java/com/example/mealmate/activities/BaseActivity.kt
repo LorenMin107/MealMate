@@ -79,9 +79,9 @@ open class BaseActivity : AppCompatActivity() {
         snackBar.show()
     }
 
-     fun hideProgressDialogOnFailure() {
+    fun mealBoardUpdateSuccess() {
         hideProgressDialog()
-        Toast.makeText(this, "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show()
+        setResult(RESULT_OK)
+        finish()
     }
-
 }

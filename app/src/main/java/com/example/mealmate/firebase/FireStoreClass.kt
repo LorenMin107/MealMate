@@ -53,8 +53,8 @@ class FireStoreClass {
             }
     }
 
-    fun createMealBoard(activity: CreateMealBoardActivity, mealBoard: MealBoard) {
-        mFireStore.collection(Constants.MEAL_BOARD).document().set(mealBoard, SetOptions.merge())
+    fun createMealBoard(activity: CreateMealBoardActivity, mealBoard: MealBoard, documentId: String) {
+        mFireStore.collection(Constants.MEAL_BOARD).document(documentId).set(mealBoard, SetOptions.merge())
             .addOnSuccessListener {
                 Log.e(activity.javaClass.simpleName, "Meal Board created successfully")
                 Toast.makeText(activity, "Meal Board created successfully", Toast.LENGTH_SHORT)
@@ -95,6 +95,8 @@ class FireStoreClass {
                 )
             }
     }
+
+
 
     fun updateUserProfileData(activity: MyProfileActivity, userHashMap: HashMap<String, Any>) {
         mFireStore.collection(Constants.USERS)
@@ -147,6 +149,8 @@ class FireStoreClass {
         }
     }
 
+
+
     fun getCurrentUserId(): String {
 
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -157,4 +161,35 @@ class FireStoreClass {
         }
         return currentUserId
     }
+
+    fun getMealBoardDocumentId(): String {
+        return mFireStore.collection(Constants.MEAL_BOARD).document().id
+    }
+
+
+
+    fun updateMealBoardDetails(
+        documentId: String,
+        mealBoardHashMap: HashMap<String, Any>,
+        activity: Activity
+    ) {
+        mFireStore.collection(Constants.MEAL_BOARD)
+            .document(documentId)
+            .update(mealBoardHashMap)
+            .addOnSuccessListener {
+                when (activity) {
+                    is CreateMealBoardActivity -> activity.mealBoardUpdateSuccess()
+                    is MealListActivity -> activity.mealBoardUpdateSuccess()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(activity, "Failed to update meal board: ${e.message}", Toast.LENGTH_LONG).show()
+                when (activity) {
+                    is CreateMealBoardActivity -> activity.hideProgressDialog()
+                    is MealListActivity -> activity.hideProgressDialog()
+                }
+            }
+    }
+
+
 }

@@ -59,8 +59,7 @@ open class MealBoardItemsAdapter(
             if (context is MainActivity) {
                 context.startActivity(
                     Intent(context, CreateMealBoardActivity::class.java)
-                        .putExtra(Constants.DOCUMENT_ID, model.documentId)
-                        .putExtra(Constants.IMAGE, model.mealImage)
+                        .putExtra("mealBoardDetails", model)  // Pass the MealBoard object
                 )
             }
         }
