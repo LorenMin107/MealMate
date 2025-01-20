@@ -35,21 +35,24 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     fun showProgressDialog(text: String) {
-        mProgressDialog = Dialog(this)
-
-        /*Set the screen content from a layout resource.
-        The resource will be inflated, adding all top-level views to the screen.
-         */
+        if (!::mProgressDialog.isInitialized) { // Ensure mProgressDialog is initialized
+            mProgressDialog = Dialog(this)
+        }
         mProgressDialog.setContentView(R.layout.dialog_progress)
 
         val tvProgressText = mProgressDialog.findViewById<TextView>(R.id.tv_progress_text)
         tvProgressText.text = text
 
-        //Start the dialog and display it on screen.
-        mProgressDialog.show()
+        if (!mProgressDialog.isShowing) { // Only show if not already visible
+            mProgressDialog.show()
+        }
     }
 
+
     fun hideProgressDialog() {
+        if (::mProgressDialog.isInitialized && mProgressDialog.isShowing) {
+            mProgressDialog.dismiss()
+        }
         mProgressDialog.dismiss()
     }
 

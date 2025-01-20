@@ -5,7 +5,6 @@ import android.util.Log
 import android.widget.Toast
 import com.example.mealmate.activities.CreateMealBoardActivity
 import com.example.mealmate.activities.MainActivity
-import com.example.mealmate.activities.MealListActivity
 import com.example.mealmate.activities.MyProfileActivity
 import com.example.mealmate.activities.SignInActivity
 import com.example.mealmate.activities.SignUpActivity
@@ -35,41 +34,34 @@ class FireStoreClass {
         }
     }
 
-    fun getMealBoardDetails(activity: MealListActivity, documentId: String) {
+
+    fun getMealBoardDetails(documentId: String, onSuccess: (MealBoard) -> Unit, onFailure: (String) -> Unit) {
         mFireStore.collection(Constants.MEAL_BOARD)
             .document(documentId)
             .get()
-            .addOnSuccessListener { documents ->
-                Log.i(activity.javaClass.simpleName, documents.toString())
-                activity.mealBoardDetails(documents.toObject(MealBoard::class.java)!!)
+            .addOnSuccessListener { document ->
+                document.toObject(MealBoard::class.java)?.let { onSuccess(it) }
+                    ?: onFailure("Meal board data is null or malformed")
             }
             .addOnFailureListener { exception ->
-                activity.hideProgressDialog()
-                Log.e(
-                    activity.javaClass.simpleName,
-                    "Error while getting meal board list.",
-                    exception
-                )
+                onFailure("Error fetching meal board: ${exception.message}")
             }
     }
 
     fun createMealBoard(activity: CreateMealBoardActivity, mealBoard: MealBoard, documentId: String) {
+        if (mealBoard.mealName.isEmpty()) {
+            Toast.makeText(activity, "Meal name cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         mFireStore.collection(Constants.MEAL_BOARD).document(documentId).set(mealBoard, SetOptions.merge())
             .addOnSuccessListener {
-                Log.e(activity.javaClass.simpleName, "Meal Board created successfully")
-                Toast.makeText(activity, "Meal Board created successfully", Toast.LENGTH_SHORT)
-                    .show()
                 activity.mealBoardCreatedSuccessfully()
             }.addOnFailureListener { exception ->
                 activity.hideProgressDialog()
-                Log.e(
-                    activity.javaClass.simpleName,
-                    "Error while creating a meal board.",
-                    exception
-                )
+                Toast.makeText(activity, "Error creating meal board: ${exception.message}", Toast.LENGTH_LONG).show()
             }
     }
-
 
     fun getMealBoardsList(activity: MainActivity) {
         mFireStore.collection(Constants.MEAL_BOARD)
@@ -164,34 +156,17 @@ class FireStoreClass {
         return mFireStore.collection(Constants.MEAL_BOARD).document().id
     }
 
-
-
     fun updateMealBoardDetails(
         documentId: String,
         mealBoardHashMap: HashMap<String, Any>,
-        activity: Activity
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
     ) {
         mFireStore.collection(Constants.MEAL_BOARD)
             .document(documentId)
             .update(mealBoardHashMap)
-            .addOnSuccessListener {
-                when (activity) {
-                    is CreateMealBoardActivity -> activity.mealBoardUpdateSuccess()
-                    is MealListActivity -> activity.mealBoardUpdateSuccess()
-                    is MainActivity -> {
-                        activity.mealBoardUpdateSuccess()
-                        getMealBoardsList(activity)
-                    }
-                }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(activity, "Failed to update meal board: ${e.message}", Toast.LENGTH_LONG).show()
-                when (activity) {
-                    is CreateMealBoardActivity -> activity.hideProgressDialog()
-                    is MealListActivity -> activity.hideProgressDialog()
-                }
-            }
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception -> onFailure("Update failed: ${exception.message}") }
     }
-
 
 }

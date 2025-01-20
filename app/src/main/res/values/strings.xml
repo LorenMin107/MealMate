@@ -28,7 +28,12 @@
     <string name="my_profile_title">My Profile</string>
 
     <string name="create_meal_title">Create Board</string>
+    <string name="update_meal_title">Update Board</string>
     <string name="create">CREATE</string>
+    <string name="save">SAVE</string>
+    <string name="update_meal_board">UPDATE MEAL BOARD</string>
+    <string name="create_meal_board">CREATE MEAL BOARD</string>
+
     <string name="meal_name">Meal Name</string>
     <string name="add_meal_board_button_description">Add a new board</string>
     <string name="no_meal_boards_available">No boards available</string>

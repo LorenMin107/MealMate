@@ -34,8 +34,8 @@ class CreateMealBoardActivity : BaseActivity() {
     private lateinit var mUserName: String
     private var mMealBoardImageURL: String = ""
     private lateinit var etMealBoardName: EditText
-    private lateinit var btnCreate: Button
-    private lateinit var mMealBoardDetails: MealBoard
+    private lateinit var btnSave: Button
+    private var mMealBoardDetails: MealBoard? = null
     private var mMealBoardDocumentId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,37 +54,33 @@ class CreateMealBoardActivity : BaseActivity() {
 
         ivMealBoardImage = findViewById(R.id.iv_create_meal_board_image)
         etMealBoardName = findViewById(R.id.et_meal_name)
-        btnCreate = findViewById(R.id.btn_create)
+        btnSave = findViewById(R.id.btn_save)
 
-        // Initialize mUserName here
         mUserName = getCurrentUserId()
-
-        // Generate a new document ID for the meal board
         mMealBoardDocumentId = FireStoreClass().getMealBoardDocumentId()
 
         setupActionBar()
+
         if (intent.hasExtra(Constants.NAME)) {
             mUserName = intent.getStringExtra(Constants.NAME)!!
         }
 
-        // Check if we are editing an existing meal board
         if (intent.hasExtra("mealBoardDetails")) {
-            mMealBoardDetails = intent.getParcelableExtra("mealBoardDetails")!!
-            etMealBoardName.setText(mMealBoardDetails.mealName)
-
-
-            // Load existing image into the image view
-            Glide.with(this)
-                .load(mMealBoardDetails.mealImage)
-                .apply(RequestOptions().centerCrop())
-                .placeholder(R.drawable.ic_board_place_holder)
-                .into(ivMealBoardImage)
+            mMealBoardDetails = intent.getParcelableExtra("mealBoardDetails")
+            mMealBoardDetails?.let {
+                loadMealBoardDetails(it.documentId)
+            }
+            btnSave.text = getString(R.string.update_meal_board)
+            updateActionBarTitle(getString(R.string.update_meal_title))
+        } else {
+            btnSave.text = getString(R.string.create_meal_board)
+            updateActionBarTitle(getString(R.string.create_meal_title))
         }
 
-        btnCreate.setOnClickListener {
-            if (intent.hasExtra("mealBoardDetails")) {
+        btnSave.setOnClickListener {
+            if (mMealBoardDetails != null) {
                 if (mSelectedImageFileUri != null) {
-                    uploadBoardImage(true)
+                    deleteOldImageAndUploadNew()
                 } else {
                     showProgressDialog(resources.getString(R.string.please_wait))
                     updateMealBoard()
@@ -98,34 +94,57 @@ class CreateMealBoardActivity : BaseActivity() {
                 }
             }
         }
+    }
 
+
+    private fun deleteOldImageAndUploadNew() {
+        mMealBoardDetails?.mealImage?.let { oldImageUrl ->
+            val oldImageRef = FirebaseStorage.getInstance().getReferenceFromUrl(oldImageUrl)
+            oldImageRef.delete().addOnSuccessListener {
+                uploadBoardImage(true)
+            }.addOnFailureListener {
+                uploadBoardImage(true) // Continue even if deletion fails
+            }
+        } ?: run {
+            uploadBoardImage(true) // Upload new image if there's no old image
+        }
     }
 
     private fun updateMealBoard() {
         val mealBoardHashMap = HashMap<String, Any>()
 
-        // If the meal image has been changed, update it
-        if (mMealBoardImageURL.isNotEmpty() && mMealBoardImageURL != mMealBoardDetails.mealImage) {
-            mealBoardHashMap["mealImage"] = mMealBoardImageURL
-        }
+        mMealBoardDetails?.let {
+            if (mMealBoardImageURL.isNotEmpty() && mMealBoardImageURL != it.mealImage) {
+                mealBoardHashMap["mealImage"] = mMealBoardImageURL
+            }
 
-        // If the meal board name has been changed, update it
-        if (etMealBoardName.text.toString() != mMealBoardDetails.mealName) {
-            mealBoardHashMap["mealName"] = etMealBoardName.text.toString()
-        }
+            if (etMealBoardName.text.toString() != it.mealName) {
+                mealBoardHashMap["mealName"] = etMealBoardName.text.toString()
+            }
 
-        // If there are any changes, update Firestore
-        if (mealBoardHashMap.isNotEmpty()) {
-            FireStoreClass().updateMealBoardDetails(mMealBoardDetails.documentId, mealBoardHashMap, this)
-            showProgressDialog(resources.getString(R.string.please_wait))
-            mealBoardUpdateSuccess()
-        } else {
-            Toast.makeText(this, "No changes detected", Toast.LENGTH_SHORT).show()
+            if (mealBoardHashMap.isNotEmpty()) {
+                showProgressDialog(resources.getString(R.string.please_wait))
+                FireStoreClass().updateMealBoardDetails(
+                    it.documentId,
+                    mealBoardHashMap,
+                    onSuccess = {
+                        hideProgressDialog()
+                        mealBoardUpdateSuccess()
+                    },
+                    onFailure = { errorMessage ->
+                        hideProgressDialog()
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                )
+            } else {
+                hideProgressDialog()
+                Toast.makeText(this, "No changes detected", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
     private fun createMealBoard() {
-
         val assignedUsersArrayList: ArrayList<String> = ArrayList()
         assignedUsersArrayList.add(getCurrentUserId())
 
@@ -142,32 +161,35 @@ class CreateMealBoardActivity : BaseActivity() {
     private fun uploadBoardImage(isUpdate: Boolean) {
         showProgressDialog(resources.getString(R.string.please_wait))
 
-        if (mSelectedImageFileUri != null) {
+        mSelectedImageFileUri?.let {
             val sRef = FirebaseStorage.getInstance().reference.child(
                 "BOARD_IMAGE" + System.currentTimeMillis() + "." + Constants.getFileExtension(
-                    this,
-                    mSelectedImageFileUri!!
+                    this, it
                 )
             )
 
-            sRef.putFile(mSelectedImageFileUri!!).addOnSuccessListener { taskSnapshot ->
+            sRef.putFile(it).addOnSuccessListener { taskSnapshot ->
                 taskSnapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { uri ->
                     mMealBoardImageURL = uri.toString()
 
-                    // Conditional check for create or update
                     if (isUpdate) {
-                        updateMealBoard() // Call update when the image upload is complete
+                        updateMealBoard()
                     } else {
-                        createMealBoard() // Call create when the image upload is complete
+                        createMealBoard()
                     }
+                }.addOnFailureListener { exception ->
+                    hideProgressDialog()
+                    Toast.makeText(this, exception.message, Toast.LENGTH_LONG).show()
                 }
             }.addOnFailureListener { exception ->
-                Toast.makeText(this, exception.message, Toast.LENGTH_LONG).show()
                 hideProgressDialog()
+                Toast.makeText(this, exception.message, Toast.LENGTH_LONG).show()
             }
+        } ?: run {
+            hideProgressDialog()
+            Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     fun mealBoardCreatedSuccessfully() {
         hideProgressDialog()
@@ -179,27 +201,20 @@ class CreateMealBoardActivity : BaseActivity() {
         val toolbar: Toolbar = findViewById(R.id.toolbar_create_board_activity)
         setSupportActionBar(toolbar)
 
-        val actionBar = supportActionBar
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true)
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_white_color_back_24dp)
-            actionBar.title = resources.getString(R.string.create_meal_title)
+        supportActionBar?.let {
+            it.setDisplayHomeAsUpEnabled(true)
+            it.setHomeAsUpIndicator(R.drawable.ic_white_color_back_24dp)
         }
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         ivMealBoardImage.setOnClickListener {
-            // Check permission based on the Android version
             val permissionToCheck = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permission.READ_MEDIA_IMAGES
             } else {
                 permission.READ_EXTERNAL_STORAGE
             }
 
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    permissionToCheck
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(this, permissionToCheck) == PackageManager.PERMISSION_GRANTED) {
                 Constants.showImageChooser(this)
             } else {
                 ActivityCompat.requestPermissions(
@@ -209,26 +224,10 @@ class CreateMealBoardActivity : BaseActivity() {
                 )
             }
         }
+    }
 
-        btnCreate.setOnClickListener {
-            val mealBoardName = etMealBoardName.text.toString().trim()
-
-            // Check if the name is empty
-            if (mealBoardName.isEmpty()) {
-                Toast.makeText(
-                    this,
-                    "Please enter a name for the meal board.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else {
-                if (mSelectedImageFileUri != null) {
-                    uploadBoardImage(false)
-                } else {
-                    showProgressDialog(resources.getString(R.string.please_wait))
-                    createMealBoard()
-                }
-            }
-        }
+    private fun updateActionBarTitle(title: String) {
+        supportActionBar?.title = title
     }
 
     override fun onRequestPermissionsResult(
@@ -252,12 +251,10 @@ class CreateMealBoardActivity : BaseActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK && requestCode == Constants.PICK_IMAGE_REQUEST_CODE && data!!.data != null) {
-            mSelectedImageFileUri = data.data!!
+        if (resultCode == RESULT_OK && requestCode == Constants.PICK_IMAGE_REQUEST_CODE && data?.data != null) {
+            mSelectedImageFileUri = data.data
             try {
-
-                Glide
-                    .with(this)
+                Glide.with(this)
                     .load(Uri.parse(mSelectedImageFileUri.toString()))
                     .apply(RequestOptions().centerCrop())
                     .placeholder(R.drawable.ic_board_place_holder)
@@ -266,5 +263,24 @@ class CreateMealBoardActivity : BaseActivity() {
                 e.printStackTrace()
             }
         }
+    }
+
+    private fun loadMealBoardDetails(documentId: String) {
+        FireStoreClass().getMealBoardDetails(
+            documentId,
+            onSuccess = { mealBoard ->
+                mMealBoardDetails = mealBoard
+                etMealBoardName.setText(mealBoard.mealName)
+                Glide.with(this)
+                    .load(mealBoard.mealImage)
+                    .apply(RequestOptions().centerCrop())
+                    .placeholder(R.drawable.ic_board_place_holder)
+                    .into(ivMealBoardImage)
+            },
+            onFailure = { errorMessage ->
+                hideProgressDialog()
+                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+            }
+        )
     }
 }

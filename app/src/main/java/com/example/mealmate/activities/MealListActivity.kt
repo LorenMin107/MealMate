@@ -2,9 +2,7 @@ package com.example.mealmate.activities
 
 import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -37,10 +35,18 @@ class MealListActivity : BaseActivity() {
         }
 
         showProgressDialog(resources.getString(R.string.please_wait))
-        FireStoreClass().getMealBoardDetails(this, mealBoardDocumentId)
+        FireStoreClass().getMealBoardDetails(
+            documentId = mealBoardDocumentId,
+            onSuccess = { mealBoard ->
+                hideProgressDialog()
+                mealBoardDetails(mealBoard)
+            },
+            onFailure = { errorMessage ->
+                hideProgressDialog()
+                showErrorSnackBar(errorMessage)
+            }
+        )
     }
-
-
 
     private fun setupActionBar(title: String) {
         val toolbar: Toolbar = findViewById(R.id.toolbar_meal_list_activity)
@@ -55,8 +61,7 @@ class MealListActivity : BaseActivity() {
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 
-    fun mealBoardDetails(mealBoard: MealBoard){
-        hideProgressDialog()
+    fun     mealBoardDetails(mealBoard: MealBoard) {
         setupActionBar(mealBoard.mealName)
     }
 }
