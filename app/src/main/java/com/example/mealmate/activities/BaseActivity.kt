@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.mealmate.R
+import com.example.mealmate.firebase.FireStoreClass
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 
@@ -83,5 +84,8 @@ open class BaseActivity : AppCompatActivity() {
         hideProgressDialog()
         setResult(RESULT_OK)
         finish()
+        if (this is MainActivity) {
+            FireStoreClass().getMealBoardsList(this)
+        }
     }
 }

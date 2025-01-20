@@ -74,25 +74,23 @@ class FireStoreClass {
     fun getMealBoardsList(activity: MainActivity) {
         mFireStore.collection(Constants.MEAL_BOARD)
             .whereArrayContains(Constants.ASSIGNED_TO, getCurrentUserId())
-            .get()
-            .addOnSuccessListener { documents ->
-                Log.e(activity.javaClass.simpleName, documents.documents.toString())
-                val mealBoardList: ArrayList<MealBoard> = ArrayList()
-                for (document in documents) {
-                    val mealBoard = document.toObject(MealBoard::class.java)
-                    mealBoard.documentId = document.id
-                    mealBoardList.add(mealBoard)
+            .addSnapshotListener { documents, exception ->
+                if (exception != null) {
+                    activity.hideProgressDialog()
+                    Log.e(activity.javaClass.simpleName, "Error while getting meal board list.", exception)
+                    return@addSnapshotListener
                 }
 
-                activity.populateBoardListToUI(mealBoardList)
-            }
-            .addOnFailureListener { exception ->
-                activity.hideProgressDialog()
-                Log.e(
-                    activity.javaClass.simpleName,
-                    "Error while getting meal board list.",
-                    exception
-                )
+                if (documents != null) {
+                    val mealBoardList: ArrayList<MealBoard> = ArrayList()
+                    for (document in documents) {
+                        val mealBoard = document.toObject(MealBoard::class.java)
+                        mealBoard.documentId = document.id
+                        mealBoardList.add(mealBoard)
+                    }
+
+                    activity.populateBoardListToUI(mealBoardList)
+                }
             }
     }
 
@@ -180,6 +178,10 @@ class FireStoreClass {
                 when (activity) {
                     is CreateMealBoardActivity -> activity.mealBoardUpdateSuccess()
                     is MealListActivity -> activity.mealBoardUpdateSuccess()
+                    is MainActivity -> {
+                        activity.mealBoardUpdateSuccess()
+                        getMealBoardsList(activity)
+                    }
                 }
             }
             .addOnFailureListener { e ->
