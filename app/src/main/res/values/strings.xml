@@ -39,6 +39,18 @@
     <string name="no_meal_boards_available">No boards available</string>
     <string name="edit_contentDescription">editing the meal board</string>
     <string name="delete_contentDescription">Deleting the meal board\n</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="add_another">Add another</string>
+    <string name="cooking_time">Cooking Time</string>
+    <string name="procedure">Procedure</string>
+    <string name="ingredient_name">Ingredient Name</string>
+    <string name="quantity">Quantity</string>
+    <string name="unit">Unit</string>
+    <string name="meal_image">Meal Image</string>
+
+
+    <string name="created_by">Created By: %1$s</string>
+    <string name="nav_shopping_list">Shopping List</string>
 
 
 </resources>

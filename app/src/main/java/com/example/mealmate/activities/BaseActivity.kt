@@ -75,6 +75,14 @@ open class BaseActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
     }
 
+    fun showSuccessSnackBar(message: String) {
+        val snackBar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
+        val snackBarView = snackBar.view
+        snackBarView.setBackgroundColor(ContextCompat.getColor(this, R.color.snackbar_success_color))
+        snackBar.show()
+    }
+
+
     fun showErrorSnackBar(message: String) {
         val snackBar =
             Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)

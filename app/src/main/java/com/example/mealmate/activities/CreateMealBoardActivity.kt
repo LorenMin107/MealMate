@@ -12,15 +12,20 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.mealmate.R
+import com.example.mealmate.adapters.IngredientsAdapter
 import com.example.mealmate.firebase.FireStoreClass
+import com.example.mealmate.models.Ingredient
 import com.example.mealmate.models.MealBoard
 import com.example.mealmate.utils.Constants
 import com.google.firebase.storage.FirebaseStorage
@@ -38,6 +43,13 @@ class CreateMealBoardActivity : BaseActivity() {
     private var mMealBoardDetails: MealBoard? = null
     private var mMealBoardDocumentId: String = ""
 
+    private lateinit var ingredientsAdapter: IngredientsAdapter
+    private val mIngredientsList: ArrayList<Ingredient> = ArrayList()
+
+
+    private lateinit var etCookingTime: EditText
+    private lateinit var etProcedure: EditText
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -52,18 +64,34 @@ class CreateMealBoardActivity : BaseActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
 
-        ivMealBoardImage = findViewById(R.id.iv_create_meal_board_image)
+        ivMealBoardImage = findViewById(R.id.iv_meal_image)
         etMealBoardName = findViewById(R.id.et_meal_name)
+        etCookingTime = findViewById(R.id.et_cooking_time)
+        etProcedure = findViewById(R.id.et_procedure)
         btnSave = findViewById(R.id.btn_save)
 
         mUserName = getCurrentUserId()
         mMealBoardDocumentId = FireStoreClass().getMealBoardDocumentId()
+
+
+        val rvIngredientsList: RecyclerView = findViewById(R.id.rv_ingredients_list)
+        rvIngredientsList.layoutManager = LinearLayoutManager(this)
+        ingredientsAdapter = IngredientsAdapter(mIngredientsList) { ingredient ->
+            // Handle ingredient selection
+            if (ingredient.isSelected) {
+                mIngredientsList.add(ingredient)
+            } else {
+                mIngredientsList.remove(ingredient)
+            }
+        }
+        rvIngredientsList.adapter = ingredientsAdapter
 
         setupActionBar()
 
         if (intent.hasExtra(Constants.NAME)) {
             mUserName = intent.getStringExtra(Constants.NAME)!!
         }
+
 
         if (intent.hasExtra("mealBoardDetails")) {
             mMealBoardDetails = intent.getParcelableExtra("mealBoardDetails")
@@ -94,8 +122,39 @@ class CreateMealBoardActivity : BaseActivity() {
                 }
             }
         }
+        // "Add Another" button setup
+        val btnAddAnotherIngredient: Button = findViewById(R.id.btn_add_another_ingredient)
+        btnAddAnotherIngredient.setOnClickListener {
+            showAddIngredientDialog()
+        }
     }
+    private fun showAddIngredientDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_ingredient, null)
 
+        val etName = dialogView.findViewById<EditText>(R.id.et_ingredient_name)
+        val etQuantity = dialogView.findViewById<EditText>(R.id.et_ingredient_quantity)
+        val etUnit = dialogView.findViewById<EditText>(R.id.et_ingredient_unit)
+
+        AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setTitle("Add Ingredient")
+            .setPositiveButton("Add") { _, _ ->
+                val name = etName.text.toString()
+                val quantity = etQuantity.text.toString()
+                val unit = etUnit.text.toString()
+
+                if (name.isNotEmpty() && quantity.isNotEmpty() && unit.isNotEmpty()) {
+                    val ingredient = Ingredient(name, quantity, unit)
+                    mIngredientsList.add(ingredient)
+                    ingredientsAdapter.notifyDataSetChanged()
+                } else {
+                    Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+            .show()
+    }
 
     private fun deleteOldImageAndUploadNew() {
         mMealBoardDetails?.mealImage?.let { oldImageUrl ->
@@ -120,6 +179,17 @@ class CreateMealBoardActivity : BaseActivity() {
 
             if (etMealBoardName.text.toString() != it.mealName) {
                 mealBoardHashMap["mealName"] = etMealBoardName.text.toString()
+            }
+
+            if (mIngredientsList != it.ingredients) {
+                mealBoardHashMap["ingredients"] = mIngredientsList
+            }
+
+            if (etCookingTime.text.toString() != it.cookingTime) {
+                mealBoardHashMap["cookingTime"] = etCookingTime.text.toString()
+            }
+            if (etProcedure.text.toString() != it.procedure) {
+                mealBoardHashMap["procedure"] = etProcedure.text.toString()
             }
 
             if (mealBoardHashMap.isNotEmpty()) {
@@ -153,7 +223,10 @@ class CreateMealBoardActivity : BaseActivity() {
             mMealBoardImageURL,
             mUserName,
             assignedUsersArrayList,
-            mMealBoardDocumentId
+            mMealBoardDocumentId,
+            mIngredientsList,
+            etCookingTime.text.toString(),
+            etProcedure.text.toString()
         )
         FireStoreClass().createMealBoard(this, mealBoard, mMealBoardDocumentId)
     }
@@ -198,7 +271,7 @@ class CreateMealBoardActivity : BaseActivity() {
     }
 
     private fun setupActionBar() {
-        val toolbar: Toolbar = findViewById(R.id.toolbar_create_board_activity)
+        val toolbar: Toolbar = findViewById(R.id.toolbar_create_meal_board_activity)
         setSupportActionBar(toolbar)
 
         supportActionBar?.let {
@@ -214,7 +287,11 @@ class CreateMealBoardActivity : BaseActivity() {
                 permission.READ_EXTERNAL_STORAGE
             }
 
-            if (ContextCompat.checkSelfPermission(this, permissionToCheck) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    permissionToCheck
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 Constants.showImageChooser(this)
             } else {
                 ActivityCompat.requestPermissions(
@@ -271,11 +348,17 @@ class CreateMealBoardActivity : BaseActivity() {
             onSuccess = { mealBoard ->
                 mMealBoardDetails = mealBoard
                 etMealBoardName.setText(mealBoard.mealName)
+                etCookingTime.setText(mealBoard.cookingTime)
+                etProcedure.setText(mealBoard.procedure)
                 Glide.with(this)
                     .load(mealBoard.mealImage)
                     .apply(RequestOptions().centerCrop())
                     .placeholder(R.drawable.ic_board_place_holder)
                     .into(ivMealBoardImage)
+
+                mIngredientsList.clear()
+                mIngredientsList.addAll(mealBoard.ingredients)
+                ingredientsAdapter.notifyDataSetChanged()
             },
             onFailure = { errorMessage ->
                 hideProgressDialog()

@@ -19,6 +19,7 @@ object Constants {
     const val PICK_IMAGE_REQUEST_CODE = 2
 
     const val DOCUMENT_ID: String = "documentId"
+    const val SHOPPING_LISTS = "shopping_list"
 
     fun showImageChooser(activity: Activity) {
         val galleryIntent = Intent(

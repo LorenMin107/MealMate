@@ -188,7 +188,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                     Intent(this, MyProfileActivity::class.java),
                     MY_PROFILE_REQUEST_CODE
                 )
-
             }
 
             R.id.nav_sign_out -> {
@@ -199,9 +198,16 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 finish()
             }
 
+            R.id.nav_shopping_list -> {
+                // Navigate to ShoppingListActivity
+                val intent = Intent(this, ShoppingListActivity::class.java)
+                startActivity(intent)
+            }
         }
+
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
+
 }

@@ -9,6 +9,7 @@ import com.example.mealmate.activities.MyProfileActivity
 import com.example.mealmate.activities.SignInActivity
 import com.example.mealmate.activities.SignUpActivity
 import com.example.mealmate.models.MealBoard
+import com.example.mealmate.models.ShoppingList
 import com.example.mealmate.models.User
 import com.example.mealmate.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
@@ -33,7 +34,6 @@ class FireStoreClass {
             Log.e("FireStore", "Error in setting user data", e)
         }
     }
-
 
     fun getMealBoardDetails(documentId: String, onSuccess: (MealBoard) -> Unit, onFailure: (String) -> Unit) {
         mFireStore.collection(Constants.MEAL_BOARD)
@@ -168,5 +168,63 @@ class FireStoreClass {
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { exception -> onFailure("Update failed: ${exception.message}") }
     }
+
+    fun saveShoppingList(shoppingList: ShoppingList, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        mFireStore.collection(Constants.SHOPPING_LISTS)
+            .document(shoppingList.id)
+            .set(shoppingList, SetOptions.merge())
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                onFailure("Error saving shopping list: ${exception.message}")
+            }
+    }
+
+    fun updateShoppingList(
+        shoppingList: ShoppingList,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        mFireStore.collection(Constants.SHOPPING_LISTS)
+            .document(shoppingList.id)
+            .set(shoppingList, SetOptions.merge())
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception ->
+                onFailure("Error updating shopping list: ${exception.message}")
+            }
+    }
+
+    fun deleteShoppingList(
+        shoppingListId: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        mFireStore.collection(Constants.SHOPPING_LISTS)
+            .document(shoppingListId)
+            .delete()
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception ->
+                onFailure("Error deleting shopping list: ${exception.message}")
+            }
+    }
+
+
+    fun getShoppingLists(onSuccess: (ArrayList<ShoppingList>) -> Unit, onFailure: (String) -> Unit) {
+        mFireStore.collection(Constants.SHOPPING_LISTS)
+            .get()
+            .addOnSuccessListener { documents ->
+                val shoppingLists = ArrayList<ShoppingList>()
+                for (document in documents) {
+                    val shoppingList = document.toObject(ShoppingList::class.java)
+                    shoppingLists.add(shoppingList)
+                }
+                onSuccess(shoppingLists)
+            }
+            .addOnFailureListener { exception ->
+                onFailure("Error fetching shopping lists: ${exception.message}")
+            }
+    }
+
 
 }

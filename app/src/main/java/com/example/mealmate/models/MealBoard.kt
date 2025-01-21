@@ -8,21 +8,36 @@ data class MealBoard(
     val mealImage: String = "",
     val createdBy: String = "",
     val assignedTo: ArrayList<String> = ArrayList(),
-    var documentId: String = ""
-):Parcelable {
+    var documentId: String = "",
+    val ingredients: ArrayList<Ingredient> = ArrayList(), // Updated
+    val cookingTime: String = "",
+    val procedure: String = "",
+    val shoppingList: ArrayList<Ingredient> = ArrayList()
+
+) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.createStringArrayList()!!,
-        parcel.readString()!!)
+        parcel.readString()!!,
+        parcel.createTypedArrayList(Ingredient.CREATOR)!!,
+        parcel.readString()!!,
+        parcel.readString()!!,
+        parcel.createTypedArrayList(Ingredient.CREATOR)!!
+    )
 
     override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
         writeString(mealName)
         writeString(mealImage)
         writeString(createdBy)
         writeStringList(assignedTo)
-        writeString(documentId) }
+        writeString(documentId)
+        writeTypedList(ingredients)
+        writeString(cookingTime)
+        writeString(procedure)
+        writeTypedList(shoppingList)
+    }
 
     override fun describeContents() = 0
 
