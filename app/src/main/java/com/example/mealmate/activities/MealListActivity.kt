@@ -18,8 +18,8 @@ import com.bumptech.glide.Glide
 import com.example.mealmate.R
 import com.example.mealmate.adapters.IngredientsAdapter
 import com.example.mealmate.firebase.FireStoreClass
-import com.example.mealmate.models.MealBoard
 import com.example.mealmate.models.Ingredient
+import com.example.mealmate.models.MealBoard
 import com.example.mealmate.models.ShoppingList
 import com.example.mealmate.utils.Constants
 
@@ -60,12 +60,6 @@ class MealListActivity : BaseActivity() {
             onSuccess = { mealBoard ->
                 hideProgressDialog()
                 setupMealBoardDetails(mealBoard)
-
-                btnViewShoppingList.setOnClickListener {
-                    val intent = Intent(this, ShoppingListActivity::class.java)
-                    intent.putParcelableArrayListExtra(Constants.SHOPPING_LISTS, mealBoard.shoppingList)
-                    startActivity(intent)
-                }
             },
             onFailure = { errorMessage ->
                 hideProgressDialog()
@@ -87,20 +81,11 @@ class MealListActivity : BaseActivity() {
                 .into(ivMealImage)
         }
 
-        // Set meal name
-        val tvMealName: TextView = findViewById(R.id.tv_meal_name)
-        tvMealName.text = mealBoard.mealName
-
-        // Set created by
-        val tvCreatedBy: TextView = findViewById(R.id.tv_created_by)
-        tvCreatedBy.text = getString(R.string.created_by, mealBoard.createdBy)
-
-        // Set cooking time
-        val tvCookingTime: TextView = findViewById(R.id.tv_cooking_time)
-        tvCookingTime.text = mealBoard.cookingTime
-        // Set procedure
-        val tvProcedure: TextView = findViewById(R.id.tv_procedure)
-        tvProcedure.text = mealBoard.procedure
+        // Set meal details
+        findViewById<TextView>(R.id.tv_meal_name).text = mealBoard.mealName
+        findViewById<TextView>(R.id.tv_created_by).text = getString(R.string.created_by, mealBoard.createdBy)
+        findViewById<TextView>(R.id.tv_cooking_time).text = mealBoard.cookingTime
+        findViewById<TextView>(R.id.tv_procedure).text = mealBoard.procedure
 
         // Extract selected ingredients for the shopping list
         shoppingList = mealBoard.ingredients.filter { it.isSelected } as ArrayList<Ingredient>
@@ -112,31 +97,56 @@ class MealListActivity : BaseActivity() {
             Button.GONE
         }
 
-        // Set up the RecyclerView with the ingredients
+        // Set up RecyclerView for ingredients
         rvMealList.layoutManager = LinearLayoutManager(this)
-        rvMealList.adapter = IngredientsAdapter(mealBoard.ingredients) { ingredient ->
+        rvMealList.adapter = IngredientsAdapter(mealBoard.ingredients, IngredientsAdapter.Mode.VIEW) { ingredient ->
             if (ingredient.isSelected) {
-                if (!mealBoard.shoppingList.contains(ingredient)) {
-                    mealBoard.shoppingList.add(ingredient)
+                if (!shoppingList.contains(ingredient)) {
+                    shoppingList.add(ingredient)
                 }
             } else {
-                mealBoard.shoppingList.remove(ingredient)
+                shoppingList.remove(ingredient)
             }
 
-            btnViewShoppingList.visibility = if (mealBoard.shoppingList.isNotEmpty()) {
+            btnViewShoppingList.visibility = if (shoppingList.isNotEmpty()) {
                 Button.VISIBLE
             } else {
                 Button.GONE
             }
+        }
 
-            // Save the shopping list to Firestore
-            val shoppingList = ShoppingList(
+        // Handle "Add to Shopping List" button click
+        btnViewShoppingList.setOnClickListener {
+            saveShoppingList(mealBoard)
+        }
+    }
+
+    private fun saveShoppingList(mealBoard: MealBoard) {
+        if (shoppingList.isNotEmpty()) {
+            val shoppingListData = ShoppingList(
                 id = mealBoard.documentId,
                 forMeal = mealBoard.mealName,
-                items = mealBoard.shoppingList,
-                createdBy = mealBoard.createdBy
+                items = shoppingList,
+                createdBy = mealBoard.createdBy,
+                timestamp = System.currentTimeMillis()
             )
-            FireStoreClass().saveShoppingList(shoppingList, {}, {})
+
+            showProgressDialog(resources.getString(R.string.please_wait))
+            FireStoreClass().saveShoppingList(
+                shoppingListData,
+                onSuccess = {
+                    hideProgressDialog()
+                    showSuccessSnackBar("Shopping list added successfully!")
+                    val intent = Intent(this, ShoppingListActivity::class.java)
+                    startActivity(intent)
+                },
+                onFailure = { errorMessage ->
+                    hideProgressDialog()
+                    showErrorSnackBar(errorMessage)
+                }
+            )
+        } else {
+            showErrorSnackBar("Please select at least one ingredient to add to the shopping list.")
         }
     }
 

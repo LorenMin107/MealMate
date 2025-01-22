@@ -1,12 +1,15 @@
 package com.example.mealmate.activities
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mealmate.R
@@ -26,6 +29,11 @@ class ShoppingListActivity : BaseActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+                true
         }
 
         setupActionBar()
@@ -52,7 +60,7 @@ class ShoppingListActivity : BaseActivity() {
                     // Notify the adapter about the data changes
                     rvGroupedList.adapter?.notifyDataSetChanged()
 
-                    // Update or delete shopping lists in Firestore
+                    // Update or delete shopping lists in FireStore
                     groupedItems.forEach { (mealName, updatedIngredients) ->
                         val shoppingListToUpdate = shoppingLists.find { it.forMeal == mealName }
                         if (shoppingListToUpdate != null) {

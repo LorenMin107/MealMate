@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -17,7 +16,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -59,10 +60,11 @@ class CreateMealBoardActivity : BaseActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+                true
+        }
 
         ivMealBoardImage = findViewById(R.id.iv_meal_image)
         etMealBoardName = findViewById(R.id.et_meal_name)
@@ -73,20 +75,8 @@ class CreateMealBoardActivity : BaseActivity() {
         mUserName = getCurrentUserId()
         mMealBoardDocumentId = FireStoreClass().getMealBoardDocumentId()
 
-
-        val rvIngredientsList: RecyclerView = findViewById(R.id.rv_ingredients_list)
-        rvIngredientsList.layoutManager = LinearLayoutManager(this)
-        ingredientsAdapter = IngredientsAdapter(mIngredientsList) { ingredient ->
-            // Handle ingredient selection
-            if (ingredient.isSelected) {
-                mIngredientsList.add(ingredient)
-            } else {
-                mIngredientsList.remove(ingredient)
-            }
-        }
-        rvIngredientsList.adapter = ingredientsAdapter
-
         setupActionBar()
+        setupIngredientsRecyclerView()
 
         if (intent.hasExtra(Constants.NAME)) {
             mUserName = intent.getStringExtra(Constants.NAME)!!
@@ -278,6 +268,10 @@ class CreateMealBoardActivity : BaseActivity() {
             it.setDisplayHomeAsUpEnabled(true)
             it.setHomeAsUpIndicator(R.drawable.ic_white_color_back_24dp)
         }
+
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.white))
+        toolbar.setSubtitleTextColor(ContextCompat.getColor(this, android.R.color.white))
+
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         ivMealBoardImage.setOnClickListener {
@@ -365,5 +359,18 @@ class CreateMealBoardActivity : BaseActivity() {
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
             }
         )
+    }
+
+    private fun setupIngredientsRecyclerView() {
+        val rvIngredientsList: RecyclerView = findViewById(R.id.rv_ingredients_list)
+        rvIngredientsList.layoutManager = LinearLayoutManager(this)
+
+        ingredientsAdapter = IngredientsAdapter(mIngredientsList, IngredientsAdapter.Mode.EDIT) { ingredient ->
+            // Remove the ingredient from the list and update the adapter
+            mIngredientsList.remove(ingredient)
+            ingredientsAdapter.notifyDataSetChanged()
+        }
+
+        rvIngredientsList.adapter = ingredientsAdapter
     }
 }
