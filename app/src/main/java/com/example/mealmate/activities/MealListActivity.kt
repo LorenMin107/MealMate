@@ -123,25 +123,74 @@ class MealListActivity : BaseActivity() {
 
     private fun saveShoppingList(mealBoard: MealBoard) {
         if (shoppingList.isNotEmpty()) {
-            val shoppingListData = ShoppingList(
-                id = mealBoard.documentId,
-                forMeal = mealBoard.mealName,
-                items = shoppingList,
-                createdBy = mealBoard.createdBy,
-                timestamp = System.currentTimeMillis()
-            )
+            // Check if the shopping list already exists in Firestore
+            FireStoreClass().getShoppingLists(
+                onSuccess = { shoppingLists ->
+                    val existingList = shoppingLists.find {
+                        it.forMeal == mealBoard.mealName
+                    }
 
-            showProgressDialog(resources.getString(R.string.please_wait))
-            FireStoreClass().saveShoppingList(
-                shoppingListData,
-                onSuccess = {
-                    hideProgressDialog()
-                    showSuccessSnackBar("Shopping list added successfully!")
-                    val intent = Intent(this, ShoppingListActivity::class.java)
-                    startActivity(intent)
+                    if (existingList != null) {
+                        // If the meal already exists, check if there are missing ingredients
+                        val missingIngredients = shoppingList.filter { ingredient ->
+                            // Only consider ingredients that are not already in the list
+                            !existingList.items.any { it.name == ingredient.name }
+                        }
+
+                        if (missingIngredients.isNotEmpty()) {
+                            // If there are missing ingredients, add them to the existing list
+                            val updatedShoppingList = existingList.copy(
+                                items = ArrayList(existingList.items + missingIngredients),
+                                timestamp = System.currentTimeMillis() // Update timestamp
+                            )
+
+                            // Update the shopping list with the new ingredients and timestamp
+                            showProgressDialog(resources.getString(R.string.please_wait))
+                            FireStoreClass().updateShoppingList(
+                                updatedShoppingList,
+                                onSuccess = {
+                                    hideProgressDialog()
+                                    showSuccessSnackBar("Shopping list updated successfully!")
+                                    val intent = Intent(this, ShoppingListActivity::class.java)
+                                    startActivity(intent)
+                                },
+                                onFailure = { errorMessage ->
+                                    hideProgressDialog()
+                                    showErrorSnackBar(errorMessage)
+                                }
+                            )
+                        } else {
+                            // If the ingredients are the same, show a message
+                            showErrorSnackBar("This meal with the same ingredients already exists in your shopping list.")
+                        }
+                    } else {
+                        // If the shopping list doesn't exist, create a new one
+                        val shoppingListData = ShoppingList(
+                            id = mealBoard.documentId,
+                            forMeal = mealBoard.mealName,
+                            items = shoppingList,
+                            createdBy = mealBoard.createdBy,
+                            timestamp = System.currentTimeMillis()
+                        )
+
+                        // Save the new shopping list
+                        showProgressDialog(resources.getString(R.string.please_wait))
+                        FireStoreClass().saveShoppingList(
+                            shoppingListData,
+                            onSuccess = {
+                                hideProgressDialog()
+                                showSuccessSnackBar("Shopping list added successfully!")
+                                val intent = Intent(this, ShoppingListActivity::class.java)
+                                startActivity(intent)
+                            },
+                            onFailure = { errorMessage ->
+                                hideProgressDialog()
+                                showErrorSnackBar(errorMessage)
+                            }
+                        )
+                    }
                 },
                 onFailure = { errorMessage ->
-                    hideProgressDialog()
                     showErrorSnackBar(errorMessage)
                 }
             )
@@ -149,6 +198,10 @@ class MealListActivity : BaseActivity() {
             showErrorSnackBar("Please select at least one ingredient to add to the shopping list.")
         }
     }
+
+
+
+
 
     private fun setupActionBar(title: String) {
         val toolbar: Toolbar = findViewById(R.id.toolbar_meal_list_activity)

@@ -3,7 +3,7 @@ package com.example.mealmate.models
 import android.os.Parcelable
 import android.os.Parcel
 
-class ShoppingList(
+data class ShoppingList(
     val id: String = "",
     val forMeal : String = "",
     val items: ArrayList<Ingredient> = ArrayList(),

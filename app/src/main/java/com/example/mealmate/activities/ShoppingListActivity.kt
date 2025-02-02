@@ -1,9 +1,11 @@
 package com.example.mealmate.activities
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
@@ -84,11 +86,42 @@ class ShoppingListActivity : BaseActivity() {
                         }
                     }
                 }
+
+                // Button to send shopping list via SMS
+                val btnSendSMS = findViewById<Button>(R.id.btn_send_sms)
+                btnSendSMS.setOnClickListener {
+                    sendShoppingListViaSMS(groupedItems)
+                }
+
             },
             onFailure = { errorMessage ->
                 showErrorSnackBar(errorMessage)
             }
         )
+    }
+
+    private fun sendShoppingListViaSMS(groupedItems: Map<String, ArrayList<Ingredient>>) {
+        // Format the shopping list into a string
+        val shoppingListString = StringBuilder()
+        for ((mealName, ingredients) in groupedItems) {
+            shoppingListString.append("For $mealName\n")
+            shoppingListString.append("Ingredients:\n")
+            for (ingredient in ingredients) {
+                shoppingListString.append("- ${ingredient.name}: ${ingredient.quantity} ${ingredient.unit}\n")
+            }
+            shoppingListString.append("\n")
+        }
+
+        // Create an intent to send an SMS
+        val smsIntent = Intent(Intent.ACTION_SENDTO)
+        smsIntent.data = Uri.parse("smsto:") // This ensures only SMS apps are shown
+        smsIntent.putExtra("sms_body", shoppingListString.toString()) // Attach the shopping list body
+
+        try {
+            startActivity(smsIntent) // This will open the SMS app
+        } catch (e: Exception) {
+            Toast.makeText(this, "SMS app not found", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun groupIngredientsByMeal(shoppingLists: ArrayList<ShoppingList>): Map<String, ArrayList<Ingredient>> {
@@ -110,12 +143,14 @@ class ShoppingListActivity : BaseActivity() {
             navigateToMainContent()
         }
     }
+
     private fun navigateToMainContent() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()
     }
+
     @Deprecated("Override of deprecated onBackPressed function")
     override fun onBackPressed() {
         super.onBackPressed()

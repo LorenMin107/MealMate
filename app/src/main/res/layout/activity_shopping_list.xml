@@ -44,4 +44,16 @@
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent" />
 
+    <Button
+        android:id="@+id/btn_send_sms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="@drawable/shape_button_rounded"
+        android:text="Send Shopping List via SMS"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/btn_clear_shopping_list" />
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
