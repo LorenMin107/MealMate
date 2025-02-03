@@ -266,11 +266,11 @@ class CreateMealBoardActivity : BaseActivity() {
 
         supportActionBar?.let {
             it.setDisplayHomeAsUpEnabled(true)
-            it.setHomeAsUpIndicator(R.drawable.ic_white_color_back_24dp)
+            it.setHomeAsUpIndicator(R.drawable.ic_primary_color_back_24dp)
         }
 
-        toolbar.setTitleTextColor(ContextCompat.getColor(this, android.R.color.white))
-        toolbar.setSubtitleTextColor(ContextCompat.getColor(this, android.R.color.white))
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorPrimary))
+        toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.colorPrimary))
 
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 

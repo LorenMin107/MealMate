@@ -135,7 +135,7 @@ class ShoppingListActivity : BaseActivity() {
 
         supportActionBar?.let {
             it.setDisplayHomeAsUpEnabled(true)
-            it.setHomeAsUpIndicator(R.drawable.ic_white_color_back_24dp)
+            it.setHomeAsUpIndicator(R.drawable.ic_primary_color_back_24dp)
             it.title = getString(R.string.nav_shopping_list) // Optional: Set a title
         }
 

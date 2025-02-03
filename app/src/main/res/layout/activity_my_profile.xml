@@ -63,7 +63,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/name"
-                        android:textSize="@dimen/et_text_size" />
+                        android:textSize="@dimen/et_text_size"
+                        android:background="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -72,7 +73,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/my_profile_et_email_marginTop">
 
-                    <!--TODO (Step 4: Here we make the email EditText as focusable false. As it should not be editable.)-->
                     <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/et_email"
                         android:layout_width="match_parent"
@@ -81,7 +81,8 @@
                         android:focusableInTouchMode="false"
                         android:hint="@string/email"
                         android:inputType="textEmailAddress"
-                        android:textSize="@dimen/et_text_size" />
+                        android:textSize="@dimen/et_text_size"
+                        android:background="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -96,7 +97,8 @@
                         android:layout_height="wrap_content"
                         android:hint="@string/mobile"
                         android:inputType="phone"
-                        android:textSize="@dimen/et_text_size" />
+                        android:textSize="@dimen/et_text_size"
+                        android:background="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 

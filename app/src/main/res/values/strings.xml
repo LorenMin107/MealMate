@@ -51,6 +51,9 @@
 
     <string name="created_by">Created By: %1$s</string>
     <string name="nav_shopping_list">Shopping List</string>
+    <string name="send_shopping_list_via_sms">Send Shopping List via SMS</string>
+    <string name="clear_completed_items">Clear Completed Items</string>
+    <string name="add_another_ingredient">Add Another Ingredient</string>
 
 
 </resources>

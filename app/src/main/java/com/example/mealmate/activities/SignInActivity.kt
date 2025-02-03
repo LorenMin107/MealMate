@@ -80,6 +80,7 @@ class SignInActivity : BaseActivity() {
 
             FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
+                    hideProgressDialog()
                     if (task.isSuccessful) {
 
                         FireStoreClass().loadUserData(this@SignInActivity)

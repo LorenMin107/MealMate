@@ -64,7 +64,7 @@
                     android:layout_marginStart="@dimen/authentication_screen_til_marginStartEnd"
                     android:layout_marginTop="@dimen/authentication_screen_til_marginTop"
                     android:layout_marginEnd="@dimen/authentication_screen_til_marginStartEnd"
-                    app:boxBackgroundMode="outline">
+                    app:boxBackgroundMode="filled">
 
                     <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/et_email_signIn"
@@ -76,10 +76,11 @@
                         android:minHeight="48dp"
 
                         android:paddingStart="16dp"
-                        android:paddingTop="8dp"
+                        android:paddingTop="15dp"
                         android:paddingEnd="16dp"
-                        android:paddingBottom="8dp"
-                        android:textSize="@dimen/et_text_size" />
+                        android:paddingBottom="2dp"
+                        android:textSize="@dimen/et_text_size"
+                        android:background="@color/white"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -88,7 +89,7 @@
                     android:layout_marginStart="@dimen/authentication_screen_til_marginStartEnd"
                     android:layout_marginTop="@dimen/authentication_screen_til_marginTop"
                     android:layout_marginEnd="@dimen/authentication_screen_til_marginStartEnd"
-                    app:boxBackgroundMode="outline">
+                    app:boxBackgroundMode="filled">
 
                     <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/et_password_signIn"
@@ -100,10 +101,11 @@
                         android:minHeight="48dp"
 
                         android:paddingStart="16dp"
-                        android:paddingTop="8dp"
+                        android:paddingTop="15dp"
                         android:paddingEnd="16dp"
-                        android:paddingBottom="8dp"
-                        android:textSize="16sp" />
+                        android:paddingBottom="2dp"
+                        android:textSize="16sp"
+                        android:background="@color/white"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
 
