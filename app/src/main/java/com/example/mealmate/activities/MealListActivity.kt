@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -169,7 +170,7 @@ class MealListActivity : BaseActivity() {
                             id = mealBoard.documentId,
                             forMeal = mealBoard.mealName,
                             items = shoppingList,
-                            createdBy = mealBoard.createdBy,
+                            createdBy = getCurrentUserId(),
                             timestamp = System.currentTimeMillis()
                         )
 
@@ -199,10 +200,6 @@ class MealListActivity : BaseActivity() {
         }
     }
 
-
-
-
-
     private fun setupActionBar(title: String) {
         val toolbar: Toolbar = findViewById(R.id.toolbar_meal_list_activity)
         setSupportActionBar(toolbar)
@@ -210,9 +207,10 @@ class MealListActivity : BaseActivity() {
         val actionBar = supportActionBar
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true)
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_white_color_back_24dp)
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_primary_color_back_24dp)
             actionBar.title = title
         }
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.colorPrimary))
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 }

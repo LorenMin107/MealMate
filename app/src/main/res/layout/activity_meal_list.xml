@@ -17,7 +17,8 @@
             android:id="@+id/toolbar_meal_list_activity"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="@color/white"
+            android:elevation="4dp"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -49,14 +50,14 @@
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:paddingTop="16dp"
-                android:text="Meal Name" />
+                android:text="@string/meal_name" />
 
             <TextView
                 android:id="@+id/tv_created_by"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="Created By: User"
+                android:text="@string/created_by_user"
                 android:paddingTop="8dp" />
 
             <TextView
@@ -64,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="Cooking Time: "
+                android:text="@string/cooking_time"
                 android:paddingTop="8dp" />
 
             <TextView
@@ -72,14 +73,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:text="Procedure: "
+                android:text="@string/procedure"
                 android:paddingTop="8dp" />
 
             <TextView
                 android:id="@+id/tv_ingredients_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ingredients:"
+                android:text="@string/ingredients"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:paddingTop="16dp" />
@@ -97,7 +98,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:background="@drawable/shape_button_rounded"
-        android:text="Add to the Shopping List"
+        android:text="@string/add_to_the_shopping_list"
         android:textColor="@android:color/white"
         android:textSize="16sp" />
 </LinearLayout>

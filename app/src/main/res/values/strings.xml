@@ -54,6 +54,11 @@
     <string name="send_shopping_list_via_sms">Send Shopping List via SMS</string>
     <string name="clear_completed_items">Clear Completed Items</string>
     <string name="add_another_ingredient">Add Another Ingredient</string>
+    <string name="created_by_user">Created By: User</string>
+    <string name="add_to_the_shopping_list">Add to the Shopping List</string>
+    <string name="unit_e_g_grams_cups">Unit (e.g., grams, cups)</string>
+    <string name="remove">Remove</string>
+    <string name="created_on_01_jan_2025">Created on: 01 Jan 2025</string>
 
 
 </resources>

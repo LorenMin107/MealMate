@@ -66,15 +66,14 @@ class ShoppingListActivity : BaseActivity() {
                     groupedItems.forEach { (mealName, updatedIngredients) ->
                         val shoppingListToUpdate = shoppingLists.find { it.forMeal == mealName }
                         if (shoppingListToUpdate != null) {
+                            // Proceed to update the shopping list
                             if (updatedIngredients.isEmpty()) {
-                                // Delete the shopping list if no ingredients are left
                                 FireStoreClass().deleteShoppingList(
                                     shoppingListToUpdate.id,
                                     onSuccess = { showSuccessSnackBar("$mealName shopping list removed.") },
                                     onFailure = { errorMessage -> showErrorSnackBar(errorMessage) }
                                 )
                             } else {
-                                // Update the shopping list with remaining ingredients
                                 shoppingListToUpdate.items.clear()
                                 shoppingListToUpdate.items.addAll(updatedIngredients)
                                 FireStoreClass().updateShoppingList(
@@ -83,6 +82,9 @@ class ShoppingListActivity : BaseActivity() {
                                     onFailure = { errorMessage -> showErrorSnackBar(errorMessage) }
                                 )
                             }
+                        } else {
+                            // Handle the case when shopping list is not found
+                            showErrorSnackBar("Shopping list for this meal was not found.")
                         }
                     }
                 }
@@ -115,7 +117,10 @@ class ShoppingListActivity : BaseActivity() {
         // Create an intent to send an SMS
         val smsIntent = Intent(Intent.ACTION_SENDTO)
         smsIntent.data = Uri.parse("smsto:") // This ensures only SMS apps are shown
-        smsIntent.putExtra("sms_body", shoppingListString.toString()) // Attach the shopping list body
+        smsIntent.putExtra(
+            "sms_body",
+            shoppingListString.toString()
+        ) // Attach the shopping list body
 
         try {
             startActivity(smsIntent) // This will open the SMS app

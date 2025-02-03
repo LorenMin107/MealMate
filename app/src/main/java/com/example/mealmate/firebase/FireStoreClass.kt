@@ -209,9 +209,9 @@ class FireStoreClass {
             }
     }
 
-
     fun getShoppingLists(onSuccess: (ArrayList<ShoppingList>) -> Unit, onFailure: (String) -> Unit) {
         mFireStore.collection(Constants.SHOPPING_LISTS)
+            .whereEqualTo("createdBy", getCurrentUserId())
             .get()
             .addOnSuccessListener { documents ->
                 val shoppingLists = ArrayList<ShoppingList>()

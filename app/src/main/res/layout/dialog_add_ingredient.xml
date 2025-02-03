@@ -10,20 +10,20 @@
         android:id="@+id/et_ingredient_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Ingredient Name"
+        android:hint="@string/ingredient_name"
         android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/et_ingredient_quantity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Quantity"
+        android:hint="@string/quantity"
         android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/et_ingredient_unit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Unit (e.g., grams, cups)"
+        android:hint="@string/unit_e_g_grams_cups"
         android:minHeight="48dp" />
 </LinearLayout>

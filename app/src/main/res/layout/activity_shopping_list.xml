@@ -33,6 +33,7 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar_shopping_list"
         app:layout_constraintBottom_toTopOf="@id/btn_send_sms" />
 
+
     <!-- Button to send shopping list via SMS -->
     <Button
         android:id="@+id/btn_send_sms"

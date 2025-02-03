@@ -10,7 +10,7 @@
         android:id="@+id/tv_meal_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Meal Name"
+        android:text="@string/meal_name"
         android:textSize="18sp"
         android:textStyle="bold" />
     <TextView
@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Created on: 01 Jan 2025"
+        android:text="@string/created_on_01_jan_2025"
         android:textSize="12sp"
         android:textColor="@color/secondary_text_color" />
 

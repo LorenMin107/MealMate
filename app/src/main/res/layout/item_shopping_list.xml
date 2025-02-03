@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="3"
-        android:text="Ingredient Name"
+        android:text="@string/ingredient_name"
         android:textSize="16sp" />
 
     <TextView
@@ -21,7 +21,7 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="Qty"
+        android:text="@string/quantity"
         android:textSize="16sp" />
 
     <TextView
@@ -31,7 +31,7 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="Unit"
+        android:text="@string/unit"
         android:textSize="16sp" />
 
     <CheckBox
