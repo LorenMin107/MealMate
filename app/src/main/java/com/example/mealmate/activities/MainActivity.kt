@@ -90,7 +90,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             rvMealBoardList.layoutManager = LinearLayoutManager(this)
             rvMealBoardList.setHasFixedSize(true)
 
-            val adapter = MealBoardItemsAdapter(this, mealBoardsList)
+            val adapter = MealBoardItemsAdapter(this, mealBoardsList, rvMealBoardList)
             rvMealBoardList.adapter = adapter
 
             adapter.setOnClickListener(object : MealBoardItemsAdapter.OnClickListener {

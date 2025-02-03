@@ -59,6 +59,7 @@
     <string name="unit_e_g_grams_cups">Unit (e.g., grams, cups)</string>
     <string name="remove">Remove</string>
     <string name="created_on_01_jan_2025">Created on: 01 Jan 2025</string>
+    <string name="no_items_to_show">NO ITEMS TO SHOW</string>
 
 
 </resources>

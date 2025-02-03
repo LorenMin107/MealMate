@@ -33,6 +33,33 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar_shopping_list"
         app:layout_constraintBottom_toTopOf="@id/btn_send_sms" />
 
+    <!-- TextView for empty state message -->
+    <TextView
+        android:id="@+id/tv_no_items"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center"
+        android:text="@string/no_items_to_show"
+        android:textColor="@color/secondary_text_color"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_shopping_list"
+        app:layout_constraintBottom_toTopOf="@id/btn_send_sms" />
+
+    <!-- ProgressBar for loading indicator -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Button to send shopping list via SMS -->
     <Button

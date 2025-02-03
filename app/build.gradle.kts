@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mealmate"
-        minSdk = 27
+        minSdk = 35
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -39,6 +39,7 @@ android {
     buildFeatures {
         compose = true
     }
+    buildToolsVersion = "35.0.0"
 }
 
 dependencies {

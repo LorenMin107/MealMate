@@ -1,18 +1,23 @@
 package com.example.mealmate.adapters
 
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import android.widget.ImageButton
+import android.widget.TextView
+import com.example.mealmate.R
 import com.example.mealmate.models.MealBoard
 import android.content.Context
 import android.content.Intent
-import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
-import com.example.mealmate.R
 import com.example.mealmate.activities.CreateMealBoardActivity
 import com.example.mealmate.activities.MainActivity
 import com.example.mealmate.firebase.FireStoreClass
@@ -22,22 +27,17 @@ import com.google.firebase.storage.FirebaseStorage
 
 open class MealBoardItemsAdapter(
     private val context: Context,
-    private var list: ArrayList<MealBoard>
+    private var list: ArrayList<MealBoard>,
+    private val recyclerView: RecyclerView
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var onClickListener: OnClickListener? = null
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return MyViewHolder(LayoutInflater.from(context).inflate(R.layout.item_meal_board, parent, false))
     }
 
-    override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
-        position: Int
-    ) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val model = list[position]
         if (holder is MyViewHolder) {
             Glide
@@ -65,11 +65,90 @@ open class MealBoardItemsAdapter(
         }
 
         holder.itemView.findViewById<ImageButton>(R.id.ib_delete_meal_board).setOnClickListener {
-            alertDialogForDeleteMealBoard(context, model.documentId, model.mealImage)
+            alertDialogForDeleteMealBoard(context, model.documentId, model.mealImage) {
+                // Notify the adapter that the item was not deleted
+                notifyItemChanged(holder.adapterPosition)
+            }
         }
     }
 
-    private fun alertDialogForDeleteMealBoard(context: Context, mealBoardId: String, image: String) {
+    // Set up swipe gestures using ItemTouchHelper
+    init {
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val mealBoard = list[position]
+                if (direction == ItemTouchHelper.LEFT) {
+                    // Swipe left to delete
+                    alertDialogForDeleteMealBoard(context, mealBoard.documentId, mealBoard.mealImage) {
+                        notifyItemChanged(position)
+                    }
+                } else if (direction == ItemTouchHelper.RIGHT) {
+                    // Swipe right to update
+                    if (context is MainActivity) {
+                        context.startActivity(
+                            Intent(context, CreateMealBoardActivity::class.java)
+                                .putExtra("mealBoardDetails", mealBoard)
+                        )
+                        notifyItemChanged(position)
+                    }
+                }
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    val itemView = viewHolder.itemView
+                    val paint = Paint()
+                    val textPaint = Paint()
+                    textPaint.color = Color.WHITE
+                    textPaint.textSize = 40f
+                    textPaint.isAntiAlias = true
+
+                    if (dX > 0) {
+                        // Swipe right
+                        paint.color = ContextCompat.getColor(context, R.color.colorPrimary)
+                        c.drawRect(
+                            itemView.left.toFloat(),
+                            itemView.top.toFloat(),
+                            itemView.left + dX,
+                            itemView.bottom.toFloat(),
+                            paint
+                        )
+                        c.drawText("Edit", itemView.left + 50f, itemView.top + itemView.height / 2f + 20f, textPaint)
+                    } else {
+                        // Swipe left
+                        paint.color = ContextCompat.getColor(context, R.color.colorDelete)
+                        c.drawRect(
+                            itemView.right + dX,
+                            itemView.top.toFloat(),
+                            itemView.right.toFloat(),
+                            itemView.bottom.toFloat(),
+                            paint
+                        )
+                        c.drawText("Delete", itemView.right - 200f, itemView.top + itemView.height / 2f + 20f, textPaint)
+                    }
+                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                }
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+    }
+
+    private fun alertDialogForDeleteMealBoard(context: Context, mealBoardId: String, image: String, onCancel: () -> Unit) {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Delete Meal Board")
         builder.setMessage("Are you sure you want to delete this meal board?")
@@ -83,6 +162,7 @@ open class MealBoardItemsAdapter(
         }
         builder.setNegativeButton("No") { dialogInterface, _ ->
             dialogInterface.dismiss()
+            onCancel()
         }
         val alertDialog: AlertDialog = builder.create()
         alertDialog.setCancelable(false)

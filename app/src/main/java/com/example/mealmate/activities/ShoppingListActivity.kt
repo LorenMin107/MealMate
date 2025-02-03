@@ -1,13 +1,23 @@
 package com.example.mealmate.activities
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -19,8 +29,17 @@ import com.example.mealmate.adapters.MealAdapter
 import com.example.mealmate.firebase.FireStoreClass
 import com.example.mealmate.models.Ingredient
 import com.example.mealmate.models.ShoppingList
+import kotlin.math.sqrt
 
-class ShoppingListActivity : BaseActivity() {
+class ShoppingListActivity : BaseActivity(), SensorEventListener {
+
+    private lateinit var sensorManager: SensorManager
+    private var accelerometer: Sensor? = null
+    private var lastShakeTime: Long = 0
+    private lateinit var groupedItems: MutableMap<String, ArrayList<Ingredient>>
+    private lateinit var mealAdapter: MealAdapter
+
+    private val SMS_PERMISSION_REQUEST_CODE = 123
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +51,8 @@ class ShoppingListActivity : BaseActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
-                true
-        }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
 
         setupActionBar()
 
@@ -47,46 +63,80 @@ class ShoppingListActivity : BaseActivity() {
                     shoppingList.items.forEach { it.isSelected = false }
                 }
 
-                val groupedItems = groupIngredientsByMeal(shoppingLists)
+                groupedItems = groupIngredientsByMeal(shoppingLists).toMutableMap()
                 val rvGroupedList = findViewById<RecyclerView>(R.id.rv_grouped_list)
-                rvGroupedList.layoutManager = LinearLayoutManager(this)
-                rvGroupedList.adapter = MealAdapter(groupedItems)
+                val tvNoItems = findViewById<TextView>(R.id.tv_no_items)
+                val progressBar = findViewById<ProgressBar>(R.id.progress_bar)
+
+                if (groupedItems.isEmpty()) {
+                    rvGroupedList.visibility = RecyclerView.GONE
+                    tvNoItems.visibility = TextView.VISIBLE
+                } else {
+                    rvGroupedList.visibility = RecyclerView.VISIBLE
+                    tvNoItems.visibility = TextView.GONE
+                    rvGroupedList.layoutManager = LinearLayoutManager(this)
+                    mealAdapter = MealAdapter(groupedItems)
+                    rvGroupedList.adapter = mealAdapter
+                }
 
                 // Clear Button Logic
                 val btnClearShoppingList = findViewById<Button>(R.id.btn_clear_shopping_list)
                 btnClearShoppingList.setOnClickListener {
+                    runOnUiThread { progressBar.visibility = View.VISIBLE }
+                    val mealsToRemove = mutableListOf<String>()
                     for ((meal, ingredients) in groupedItems) {
-                        ingredients.removeAll { it.isSelected }
-                    }
-
-                    // Notify the adapter about the data changes
-                    rvGroupedList.adapter?.notifyDataSetChanged()
-
-                    // Update or delete shopping lists in FireStore
-                    groupedItems.forEach { (mealName, updatedIngredients) ->
-                        val shoppingListToUpdate = shoppingLists.find { it.forMeal == mealName }
-                        if (shoppingListToUpdate != null) {
-                            // Proceed to update the shopping list
-                            if (updatedIngredients.isEmpty()) {
-                                FireStoreClass().deleteShoppingList(
-                                    shoppingListToUpdate.id,
-                                    onSuccess = { showSuccessSnackBar("$mealName shopping list removed.") },
-                                    onFailure = { errorMessage -> showErrorSnackBar(errorMessage) }
-                                )
-                            } else {
-                                shoppingListToUpdate.items.clear()
-                                shoppingListToUpdate.items.addAll(updatedIngredients)
-                                FireStoreClass().updateShoppingList(
-                                    shoppingListToUpdate,
-                                    onSuccess = { showSuccessSnackBar("$mealName updated.") },
-                                    onFailure = { errorMessage -> showErrorSnackBar(errorMessage) }
-                                )
+                        val iterator = ingredients.iterator()
+                        while (iterator.hasNext()) {
+                            val ingredient = iterator.next()
+                            if (ingredient.isSelected) {
+                                iterator.remove()
                             }
-                        } else {
-                            // Handle the case when shopping list is not found
-                            showErrorSnackBar("Shopping list for this meal was not found.")
+                        }
+                        if (ingredients.isEmpty()) {
+                            mealsToRemove.add(meal)
                         }
                     }
+
+// Remove meals from adapter and FireStore
+mealsToRemove.forEach { meal ->
+    val position = groupedItems.keys.indexOf(meal)
+    groupedItems.remove(meal)
+    mealAdapter.notifyItemRemoved(position)
+    val shoppingListToUpdate = shoppingLists.find { it.forMeal == meal }
+    shoppingListToUpdate?.let {
+        FireStoreClass().deleteShoppingList(it.id, {
+            // Handle success
+        }, { errorMessage ->
+            // Handle failure
+            showErrorSnackBar(errorMessage)
+        })
+    }
+}
+
+// Update remaining shopping lists in FireStore
+groupedItems.forEach { (mealName, updatedIngredients) ->
+    val shoppingListToUpdate = shoppingLists.find { it.forMeal == mealName }
+    shoppingListToUpdate?.let {
+        it.items.clear()
+        it.items.addAll(updatedIngredients)
+        FireStoreClass().updateShoppingList(it, {
+            // Handle success
+        }, { errorMessage ->
+            // Handle failure
+            showErrorSnackBar(errorMessage)
+        })
+    }
+}
+
+// Notify the adapter of the range change
+mealAdapter.notifyItemRangeChanged(0, groupedItems.size)
+
+if (groupedItems.isEmpty()) {
+    rvGroupedList.visibility = RecyclerView.GONE
+    tvNoItems.visibility = TextView.VISIBLE
+}
+
+runOnUiThread { progressBar.visibility = View.GONE }
                 }
 
                 // Button to send shopping list via SMS
@@ -94,38 +144,95 @@ class ShoppingListActivity : BaseActivity() {
                 btnSendSMS.setOnClickListener {
                     sendShoppingListViaSMS(groupedItems)
                 }
-
             },
             onFailure = { errorMessage ->
                 showErrorSnackBar(errorMessage)
             }
         )
+
+        // Initialize sensor manager and accelerometer
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        // Request permission for SMS
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.SEND_SMS)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.SEND_SMS),
+                SMS_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        accelerometer?.also { acc ->
+            sensorManager.registerListener(this, acc, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        event?.let {
+            val x = it.values[0]
+            val y = it.values[1]
+            val z = it.values[2]
+
+            // Calculate the acceleration
+            val acceleration = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
+
+            // Log acceleration value for debugging
+            Log.d("ShakeDetection", "Acceleration: $acceleration")
+
+            // Trigger on shake
+            if (acceleration > 1.5) { // Adjust threshold as necessary
+                val currentTime = System.currentTimeMillis()
+
+                // Ensure it doesn't trigger too often
+                if (currentTime - lastShakeTime > 1000) { // 1 second interval
+                    lastShakeTime = currentTime
+                    Log.d("ShakeDetection", "Shake detected!")
+                    sendShoppingListViaSMS(groupedItems)
+                }
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // Do nothing
     }
 
     private fun sendShoppingListViaSMS(groupedItems: Map<String, ArrayList<Ingredient>>) {
-        // Format the shopping list into a string
-        val shoppingListString = StringBuilder()
-        for ((mealName, ingredients) in groupedItems) {
-            shoppingListString.append("For $mealName\n")
-            shoppingListString.append("Ingredients:\n")
-            for (ingredient in ingredients) {
-                shoppingListString.append("- ${ingredient.name}: ${ingredient.quantity} ${ingredient.unit}\n")
+        // Check if the permission is granted before sending SMS
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+            // Format the shopping list into a string
+            val shoppingListString = StringBuilder()
+            for ((mealName, ingredients) in groupedItems) {
+                shoppingListString.append("For $mealName\n")
+                shoppingListString.append("Ingredients:\n")
+                for (ingredient in ingredients) {
+                    shoppingListString.append("- ${ingredient.name}: ${ingredient.quantity} ${ingredient.unit}\n")
+                }
+                shoppingListString.append("\n")
             }
-            shoppingListString.append("\n")
-        }
 
-        // Create an intent to send an SMS
-        val smsIntent = Intent(Intent.ACTION_SENDTO)
-        smsIntent.data = Uri.parse("smsto:") // This ensures only SMS apps are shown
-        smsIntent.putExtra(
-            "sms_body",
-            shoppingListString.toString()
-        ) // Attach the shopping list body
+            // Create an intent to send an SMS
+            val smsIntent = Intent(Intent.ACTION_SENDTO)
+            smsIntent.data = Uri.parse("smsto:") // This ensures only SMS apps are shown
+            smsIntent.putExtra("sms_body", shoppingListString.toString()) // Attach the shopping list body
 
-        try {
-            startActivity(smsIntent) // This will open the SMS app
-        } catch (e: Exception) {
-            Toast.makeText(this, "SMS app not found", Toast.LENGTH_SHORT).show()
+            try {
+                startActivity(smsIntent) // This will open the SMS app
+            } catch (e: Exception) {
+                Toast.makeText(this, "SMS app not found", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "SMS permission is required", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -160,5 +267,19 @@ class ShoppingListActivity : BaseActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         navigateToMainContent()
+    }
+
+    // Handle permission result
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+                Toast.makeText(this, "SMS permission granted", Toast.LENGTH_SHORT).show()
+            } else {
+                // Permission denied
+                Toast.makeText(this, "SMS permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
