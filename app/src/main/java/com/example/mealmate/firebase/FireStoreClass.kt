@@ -35,7 +35,11 @@ class FireStoreClass {
         }
     }
 
-    fun getMealBoardDetails(documentId: String, onSuccess: (MealBoard) -> Unit, onFailure: (String) -> Unit) {
+    fun getMealBoardDetails(
+        documentId: String,
+        onSuccess: (MealBoard) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
         mFireStore.collection(Constants.MEAL_BOARD)
             .document(documentId)
             .get()
@@ -48,18 +52,27 @@ class FireStoreClass {
             }
     }
 
-    fun createMealBoard(activity: CreateMealBoardActivity, mealBoard: MealBoard, documentId: String) {
+    fun createMealBoard(
+        activity: CreateMealBoardActivity,
+        mealBoard: MealBoard,
+        documentId: String
+    ) {
         if (mealBoard.mealName.isEmpty()) {
             Toast.makeText(activity, "Meal name cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
 
-        mFireStore.collection(Constants.MEAL_BOARD).document(documentId).set(mealBoard, SetOptions.merge())
+        mFireStore.collection(Constants.MEAL_BOARD).document(documentId)
+            .set(mealBoard, SetOptions.merge())
             .addOnSuccessListener {
                 activity.mealBoardCreatedSuccessfully()
             }.addOnFailureListener { exception ->
                 activity.hideProgressDialog()
-                Toast.makeText(activity, "Error creating meal board: ${exception.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    activity,
+                    "Error creating meal board: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
     }
 
@@ -69,7 +82,11 @@ class FireStoreClass {
             .addSnapshotListener { documents, exception ->
                 if (exception != null) {
                     activity.hideProgressDialog()
-                    Log.e(activity.javaClass.simpleName, "Error while getting meal board list.", exception)
+                    Log.e(
+                        activity.javaClass.simpleName,
+                        "Error while getting meal board list.",
+                        exception
+                    )
                     return@addSnapshotListener
                 }
 
@@ -85,7 +102,6 @@ class FireStoreClass {
                 }
             }
     }
-
 
 
     fun updateUserProfileData(activity: MyProfileActivity, userHashMap: HashMap<String, Any>) {
@@ -140,7 +156,6 @@ class FireStoreClass {
     }
 
 
-
     fun getCurrentUserId(): String {
 
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -169,7 +184,11 @@ class FireStoreClass {
             .addOnFailureListener { exception -> onFailure("Update failed: ${exception.message}") }
     }
 
-    fun saveShoppingList(shoppingList: ShoppingList, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+    fun saveShoppingList(
+        shoppingList: ShoppingList,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
         mFireStore.collection(Constants.SHOPPING_LISTS)
             .document(shoppingList.id)
             .set(shoppingList, SetOptions.merge())
@@ -209,7 +228,10 @@ class FireStoreClass {
             }
     }
 
-    fun getShoppingLists(onSuccess: (ArrayList<ShoppingList>) -> Unit, onFailure: (String) -> Unit) {
+    fun getShoppingLists(
+        onSuccess: (ArrayList<ShoppingList>) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
         mFireStore.collection(Constants.SHOPPING_LISTS)
             .whereEqualTo("createdBy", getCurrentUserId())
             .get()
@@ -226,5 +248,12 @@ class FireStoreClass {
             }
     }
 
+    fun deleteMealBoard(mealBoardId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        mFireStore.collection(Constants.MEAL_BOARD)
+            .document(mealBoardId)
+            .delete()
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception -> onFailure(exception.message ?: "Failed to delete meal board") }
+    }
 
 }

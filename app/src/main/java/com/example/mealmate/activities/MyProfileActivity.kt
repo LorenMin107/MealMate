@@ -61,7 +61,7 @@ class MyProfileActivity : BaseActivity() {
             ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
                 view.setPadding(0, systemBars.top, 0, 0)
-                view.setBackgroundColor(getColor(R.color.colorPrimary)) // Ensure the status bar matches the app bar
+                view.setBackgroundColor(getColor(R.color.colorPrimary))
                 insets
             }
         }
@@ -74,7 +74,6 @@ class MyProfileActivity : BaseActivity() {
         FireStoreClass().loadUserData(this)
 
         ivProfileUserImage.setOnClickListener {
-            // Check permission based on the Android version
             val permissionToCheck = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permission.READ_MEDIA_IMAGES
             } else {
@@ -96,7 +95,6 @@ class MyProfileActivity : BaseActivity() {
             }
         }
 
-        // Unified OnClickListener for btnUpdate
         btnUpdate.setOnClickListener {
             if (mSelectedImageFileUri != null) {
                 uploadUserImage()

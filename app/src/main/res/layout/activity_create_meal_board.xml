@@ -35,7 +35,7 @@
                 android:layout_height="@dimen/meal_image_size"
                 android:layout_gravity="center"
                 android:layout_marginTop="@dimen/create_meal_board_content_marginTop"
-                android:src="@drawable/ic_user_place_holder"
+                android:src="@drawable/ic_image_place_holder"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />

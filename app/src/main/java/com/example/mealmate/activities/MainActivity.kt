@@ -87,25 +87,29 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             rvMealBoardList.visibility = View.VISIBLE
             tvNoMealBoardsAvailable.visibility = View.GONE
 
-            rvMealBoardList.layoutManager = LinearLayoutManager(this)
-            rvMealBoardList.setHasFixedSize(true)
+            val adapter = rvMealBoardList.adapter as? MealBoardItemsAdapter
+            if (adapter == null) {
+                rvMealBoardList.layoutManager = LinearLayoutManager(this)
+                rvMealBoardList.setHasFixedSize(true)
+                val newAdapter = MealBoardItemsAdapter(this, mealBoardsList.toMutableList(), rvMealBoardList)
+                rvMealBoardList.adapter = newAdapter
 
-            val adapter = MealBoardItemsAdapter(this, mealBoardsList, rvMealBoardList)
-            rvMealBoardList.adapter = adapter
-
-            adapter.setOnClickListener(object : MealBoardItemsAdapter.OnClickListener {
-                override fun onClick(position: Int, model: MealBoard) {
-                    val intent = Intent(this@MainActivity, MealListActivity::class.java)
-                    intent.putExtra(Constants.DOCUMENT_ID, model.documentId)
-                    startActivity(intent)
-                }
-            })
-
+                newAdapter.setOnClickListener(object : MealBoardItemsAdapter.OnClickListener {
+                    override fun onClick(position: Int, model: MealBoard) {
+                        val intent = Intent(this@MainActivity, MealListActivity::class.java)
+                        intent.putExtra(Constants.DOCUMENT_ID, model.documentId)
+                        startActivity(intent)
+                    }
+                })
+            } else {
+                adapter.updateList(mealBoardsList)
+            }
         } else {
             rvMealBoardList.visibility = View.GONE
             tvNoMealBoardsAvailable.visibility = View.VISIBLE
         }
     }
+
 
     private fun setupActionBar() {
         val toolbar: Toolbar = findViewById(R.id.toolbar_main_activity)

@@ -7,7 +7,7 @@
     <dimen name="intro_screen_title_text_marginTop">40dp</dimen>
     <dimen name="intro_screen_image_marginTop">30dp</dimen>
     <dimen name="lets_get_started_text_marginTop">25dp</dimen>
-    <dimen name="lets_get_started_text_size">25sp</dimen>
+    <dimen name="lets_get_started_text_size">22sp</dimen>
     <dimen name="intro_text_marginStartEnd">20dp</dimen>
     <dimen name="intro_text_line_spacing_extra">5dp</dimen>
     <dimen name="intro_text_marginTop">10dp</dimen>

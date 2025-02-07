@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
+    android:orientation="vertical"
     android:background="@drawable/ic_splash_background"
     tools:context=".activities.SplashActivity">
 
@@ -17,5 +17,14 @@
         android:textColor="@color/white"
         android:textSize="@dimen/splash_screen_title_text_size"
         android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/slogans"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/slogan"
+        android:textColor="@color/white"
+        android:textSize="20sp"/>
 
 </LinearLayout>

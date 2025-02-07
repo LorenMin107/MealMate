@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.mealmate.activities
 
 import android.content.Intent
@@ -97,46 +99,47 @@ class ShoppingListActivity : BaseActivity(), SensorEventListener {
                         }
                     }
 
-// Remove meals from adapter and FireStore
-mealsToRemove.forEach { meal ->
-    val position = groupedItems.keys.indexOf(meal)
-    groupedItems.remove(meal)
-    mealAdapter.notifyItemRemoved(position)
-    val shoppingListToUpdate = shoppingLists.find { it.forMeal == meal }
-    shoppingListToUpdate?.let {
-        FireStoreClass().deleteShoppingList(it.id, {
-            // Handle success
-        }, { errorMessage ->
-            // Handle failure
-            showErrorSnackBar(errorMessage)
-        })
-    }
-}
+                    // Remove meals from adapter and FireStore
+                    mealsToRemove.forEach { meal ->
+                        val position = groupedItems.keys.indexOf(meal)
+                        groupedItems.remove(meal)
+                        mealAdapter.notifyItemRemoved(position)
+                        val shoppingListToUpdate = shoppingLists.find { it.forMeal == meal }
+                        shoppingListToUpdate?.let {
+                            FireStoreClass().deleteShoppingList(it.id, {
+                                // Handle success
+                                showSuccessSnackBar("Shopping list cleared")
+                            }, { errorMessage ->
+                                // Handle failure
+                                showErrorSnackBar(errorMessage)
+                            })
+                        }
+                    }
 
-// Update remaining shopping lists in FireStore
-groupedItems.forEach { (mealName, updatedIngredients) ->
-    val shoppingListToUpdate = shoppingLists.find { it.forMeal == mealName }
-    shoppingListToUpdate?.let {
-        it.items.clear()
-        it.items.addAll(updatedIngredients)
-        FireStoreClass().updateShoppingList(it, {
-            // Handle success
-        }, { errorMessage ->
-            // Handle failure
-            showErrorSnackBar(errorMessage)
-        })
-    }
-}
+                    // Update remaining shopping lists in FireStore
+                    groupedItems.forEach { (mealName, updatedIngredients) ->
+                        val shoppingListToUpdate = shoppingLists.find { it.forMeal == mealName }
+                        shoppingListToUpdate?.let {
+                            it.items.clear()
+                            it.items.addAll(updatedIngredients)
+                            FireStoreClass().updateShoppingList(it, {
+                                // Handle success
+                            }, { errorMessage ->
+                                // Handle failure
+                                showErrorSnackBar(errorMessage)
+                            })
+                        }
+                    }
 
-// Notify the adapter of the range change
-mealAdapter.notifyItemRangeChanged(0, groupedItems.size)
+                    // Notify the adapter of the range change
+                    mealAdapter.notifyItemRangeChanged(0, groupedItems.size)
 
-if (groupedItems.isEmpty()) {
-    rvGroupedList.visibility = RecyclerView.GONE
-    tvNoItems.visibility = TextView.VISIBLE
-}
+                    if (groupedItems.isEmpty()) {
+                        rvGroupedList.visibility = RecyclerView.GONE
+                        tvNoItems.visibility = TextView.VISIBLE
+                    }
 
-runOnUiThread { progressBar.visibility = View.GONE }
+                    runOnUiThread { progressBar.visibility = View.GONE }
                 }
 
                 // Button to send shopping list via SMS
@@ -150,13 +153,13 @@ runOnUiThread { progressBar.visibility = View.GONE }
             }
         )
 
-        // Initialize sensor manager and accelerometer
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         // Request permission for SMS
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.SEND_SMS)
-            != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(android.Manifest.permission.SEND_SMS),
@@ -183,18 +186,14 @@ runOnUiThread { progressBar.visibility = View.GONE }
             val y = it.values[1]
             val z = it.values[2]
 
-            // Calculate the acceleration
             val acceleration = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
 
-            // Log acceleration value for debugging
             Log.d("ShakeDetection", "Acceleration: $acceleration")
 
-            // Trigger on shake
-            if (acceleration > 1.5) { // Adjust threshold as necessary
+            if (acceleration > 1.5) {
                 val currentTime = System.currentTimeMillis()
 
-                // Ensure it doesn't trigger too often
-                if (currentTime - lastShakeTime > 1000) { // 1 second interval
+                if (currentTime - lastShakeTime > 1000) {
                     lastShakeTime = currentTime
                     Log.d("ShakeDetection", "Shake detected!")
                     sendShoppingListViaSMS(groupedItems)
@@ -208,9 +207,11 @@ runOnUiThread { progressBar.visibility = View.GONE }
     }
 
     private fun sendShoppingListViaSMS(groupedItems: Map<String, ArrayList<Ingredient>>) {
-        // Check if the permission is granted before sending SMS
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
-            // Format the shopping list into a string
+        if (ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.SEND_SMS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             val shoppingListString = StringBuilder()
             for ((mealName, ingredients) in groupedItems) {
                 shoppingListString.append("For $mealName\n")
@@ -221,13 +222,15 @@ runOnUiThread { progressBar.visibility = View.GONE }
                 shoppingListString.append("\n")
             }
 
-            // Create an intent to send an SMS
             val smsIntent = Intent(Intent.ACTION_SENDTO)
-            smsIntent.data = Uri.parse("smsto:") // This ensures only SMS apps are shown
-            smsIntent.putExtra("sms_body", shoppingListString.toString()) // Attach the shopping list body
+            smsIntent.data = Uri.parse("smsto:")
+            smsIntent.putExtra(
+                "sms_body",
+                shoppingListString.toString()
+            )
 
             try {
-                startActivity(smsIntent) // This will open the SMS app
+                startActivity(smsIntent)
             } catch (e: Exception) {
                 Toast.makeText(this, "SMS app not found", Toast.LENGTH_SHORT).show()
             }
@@ -270,7 +273,11 @@ runOnUiThread { progressBar.visibility = View.GONE }
     }
 
     // Handle permission result
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

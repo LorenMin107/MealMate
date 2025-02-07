@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.mealmate.activities
 
 import android.Manifest.permission
@@ -31,6 +33,7 @@ import com.example.mealmate.models.MealBoard
 import com.example.mealmate.utils.Constants
 import com.google.firebase.storage.FirebaseStorage
 import java.io.IOException
+import kotlin.toString
 
 class CreateMealBoardActivity : BaseActivity() {
 
@@ -118,6 +121,7 @@ class CreateMealBoardActivity : BaseActivity() {
             showAddIngredientDialog()
         }
     }
+
     private fun showAddIngredientDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_ingredient, null)
 
@@ -148,11 +152,15 @@ class CreateMealBoardActivity : BaseActivity() {
 
     private fun deleteOldImageAndUploadNew() {
         mMealBoardDetails?.mealImage?.let { oldImageUrl ->
-            val oldImageRef = FirebaseStorage.getInstance().getReferenceFromUrl(oldImageUrl)
-            oldImageRef.delete().addOnSuccessListener {
-                uploadBoardImage(true)
-            }.addOnFailureListener {
-                uploadBoardImage(true) // Continue even if deletion fails
+            if (oldImageUrl.isNotEmpty()) {
+                val oldImageRef = FirebaseStorage.getInstance().getReferenceFromUrl(oldImageUrl)
+                oldImageRef.delete().addOnSuccessListener {
+                    uploadBoardImage(true)
+                }.addOnFailureListener {
+                    uploadBoardImage(true) // Continue even if deletion fails
+                }
+            } else {
+                uploadBoardImage(true) // Upload new image if there's no old image
             }
         } ?: run {
             uploadBoardImage(true) // Upload new image if there's no old image
@@ -205,6 +213,12 @@ class CreateMealBoardActivity : BaseActivity() {
     }
 
     private fun createMealBoard() {
+        if (etMealBoardName.text.toString().isEmpty()) {
+            hideProgressDialog()
+            Toast.makeText(this, "Meal name cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val assignedUsersArrayList: ArrayList<String> = ArrayList()
         assignedUsersArrayList.add(getCurrentUserId())
 
@@ -365,11 +379,12 @@ class CreateMealBoardActivity : BaseActivity() {
         val rvIngredientsList: RecyclerView = findViewById(R.id.rv_ingredients_list)
         rvIngredientsList.layoutManager = LinearLayoutManager(this)
 
-        ingredientsAdapter = IngredientsAdapter(mIngredientsList, IngredientsAdapter.Mode.EDIT) { ingredient ->
-            // Remove the ingredient from the list and update the adapter
-            mIngredientsList.remove(ingredient)
-            ingredientsAdapter.notifyDataSetChanged()
-        }
+        ingredientsAdapter =
+            IngredientsAdapter(mIngredientsList, IngredientsAdapter.Mode.EDIT) { ingredient ->
+                // Remove the ingredient from the list and update the adapter
+                mIngredientsList.remove(ingredient)
+                ingredientsAdapter.notifyDataSetChanged()
+            }
 
         rvIngredientsList.adapter = ingredientsAdapter
     }
