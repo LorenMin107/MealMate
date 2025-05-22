@@ -190,7 +190,7 @@ class ShoppingListActivity : BaseActivity(), SensorEventListener {
 
             Log.d("ShakeDetection", "Acceleration: $acceleration")
 
-            if (acceleration > 1.5) {
+            if (acceleration > 1.5) { // This is for Emulate shake detection. For a real app, use a threshold of 7.0
                 val currentTime = System.currentTimeMillis()
 
                 if (currentTime - lastShakeTime > 1000) {

@@ -253,7 +253,11 @@ class FireStoreClass {
             .document(mealBoardId)
             .delete()
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { exception -> onFailure(exception.message ?: "Failed to delete meal board") }
+            .addOnFailureListener { exception ->
+                onFailure(
+                    exception.message ?: "Failed to delete meal board"
+                )
+            }
     }
 
 }
